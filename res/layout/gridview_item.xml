@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<son.app.util.GridViewItem
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/item"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ImageView 
+        android:id="@+id/image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"/>
+    <View 
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/item_gridview"/>
+    <TextView 
+        android:id="@+id/label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Dân trí"
+        android:padding="5dp"
+        android:typeface="serif"
+        android:textColor="@color/white"
+        android:shadowColor="#000000"
+        android:shadowDx="1"
+        android:shadowDy="1"
+        android:shadowRadius="2"
+        android:textStyle="bold"/>
+    <View 
+        android:id="@+id/view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/item_gridview_clicked"
+        android:visibility="gone"/>
+</son.app.util.GridViewItem>

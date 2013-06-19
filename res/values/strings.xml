@@ -1,0 +1,8 @@
+<resources>
+
+    <string name="app_name">News Online</string>
+	<string name="network_state">Please turn on date or wifi</string>
+	<string name="button_cancel">Cancel</string>
+	<string name="open_drawer">Open drawer</string>
+    <string name="close_drawer">Close drawer</string>
+</resources>

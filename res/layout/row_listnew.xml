@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="5dp"
+    android:layout_margin="5dp"
+    android:layout_gravity="center"
+    android:orientation="vertical" >
+    <TextView 
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textSize="18dp"
+        android:text="Nữ hoàng Anh sắp chuyển giao quyền lực cho người kế vị"/>
+    <TextView 
+        android:id="@+id/date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="italic"
+        android:textSize="10dp"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="3dp"
+        android:text="sfsdf"/>
+    
+    <LinearLayout 
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center">
+        <ImageView 
+	        android:id="@+id/image"
+	        android:layout_width="60dp"
+	        android:layout_height="60dp"
+	        android:src="@drawable/newspaper"
+	        android:layout_marginRight="5dp"
+	        android:scaleType="centerCrop"/>
+        <TextView 
+            android:id="@+id/description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="13dp"
+            android:maxLines="4"
+            android:ellipsize="marquee"
+            android:text="Dư luận trong giới thần dân anh cho rằng phải chăng nữ hoàng anh sắp thoái vị, theo gương nũ hoàng hà lan nhương ngôi cho con trai"/>
+        
+    </LinearLayout>
+
+</LinearLayout>
