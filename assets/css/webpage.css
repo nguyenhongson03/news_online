@@ -3,4 +3,5 @@
         div,table,tbody,tr,td,p,span,a {width: 100%;}
         blockquote {width: 100%;margin-right: 0px;margin-left: 0px;}
         iframe {max-width: 100%}
+        video {width: 100%}
 </style>
