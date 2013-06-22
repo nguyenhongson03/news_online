@@ -15,13 +15,15 @@ public class AddNewspaperAdapter extends ArrayAdapter<String>{
 	private Context context;
 	private String[] ListNewspaper;
 	private int category;
+	private String tableName;
 	
-	public AddNewspaperAdapter(Context context, String[] ListNewspaper, int category) {
+	public AddNewspaperAdapter(Context context, String[] ListNewspaper, int category, String tableName) {
 		super(context, R.layout.row_listview_newspaper, ListNewspaper);
 		// TODO Auto-generated constructor stub
 		this.context = context;
 		this.ListNewspaper = ListNewspaper;
 		this.category = category;
+		this.tableName = tableName;
 	}
 	
 	@Override
@@ -39,7 +41,7 @@ public class AddNewspaperAdapter extends ArrayAdapter<String>{
 		newspaper.setText(Variables.NewspaperTitle.get(item));
 		icon.setImageResource(Variables.icons.get(item));
 		final NewspaperHelper db = new NewspaperHelper(context);
-		if (db.getNewspaperByName(item, Variables.TABLE_NEWSPAPER_CHOSE).getCount() != 0)
+		if (db.getNewspaperByName(item, tableName).getCount() != 0)
 			addNewspaper.setVisibility(View.GONE);
 		else {
 			addNewspaper.setOnClickListener(new View.OnClickListener() {
@@ -47,7 +49,7 @@ public class AddNewspaperAdapter extends ArrayAdapter<String>{
 				@Override
 				public void onClick(View v) {
 					// TODO Auto-generated method stub
-					db.insert(item, category, Variables.TABLE_NEWSPAPER_CHOSE);
+					db.insert(item, category, tableName);
 					notifyDataSetChanged();
 				}
 			});

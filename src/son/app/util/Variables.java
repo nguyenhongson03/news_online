@@ -56,6 +56,8 @@ public class Variables {
 	}
 	
 	public static String TABLE_NEWSPAPER_CHOSE = "newspaper_chose";
+	public static String TABLE_NEWSPAPER_OFFLINE = "newspaper_offline";
+	public static String TABLE_NEWSPAPER_THUMBNAIL = "newspaper_thumbnail";
 	
 	public static String[] dulich = {"dulichvietnam"};
 	public static String[] congnghe = {"tinhte", "ictnews", "thongtincongnghe", "khoahoc"};
@@ -951,6 +953,10 @@ public class Variables {
 		linkNewspaper.put("thesaigontimes", "http://www.thesaigontimes.vn");
 		linkNewspaper.put("anninhthudo", "http://www.anninhthudo.vn");
 		linkNewspaper.put("giaoducthoidai", "http://www.gdtd.vn");
+		linkNewspaper.put("24h", "http://24h.com.vn");
+		linkNewspaper.put("bongdaplus", "http://bongdaplus.vn/");
+		linkNewspaper.put("ictnews", "http://www.ictnews.vn/GetFiles/");
+		linkNewspaper.put("khoahoc", "http://www.khoahoc.com.vn");
 	}
 	
 	public static HashMap<String, String> NewspaperTitle = new HashMap<String, String>();

@@ -53,7 +53,7 @@ public class AddNewspaper extends Activity {
 				// TODO Auto-generated method stub
 				category = arg2;
 				String[] listNewspaper = Variables.ListCategory.get(arg2).getItems();
-				AddNewspaperAdapter adapter = new AddNewspaperAdapter(getApplicationContext(), listNewspaper, arg2);
+				AddNewspaperAdapter adapter = new AddNewspaperAdapter(getApplicationContext(), listNewspaper, arg2, Variables.TABLE_NEWSPAPER_CHOSE);
 				lvNewpspaper.setAdapter(adapter);
 				nextView();
 			}

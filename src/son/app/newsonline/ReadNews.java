@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 import son.app.model.News;
-import son.app.parse.ParseHTML;
+import son.app.parse.ParseContentHTML;
 import son.app.util.Variables;
 
 import android.app.ActionBar;
@@ -165,30 +165,6 @@ public class ReadNews extends FragmentActivity{
 			return null;
 		}
 		
-		private String addMetaForHtml(String html){
-			String head = "<head>" + readCSS() + "</head>";
-								
-			return "<html>" + head + "<body>" + html + "</body>" + "</html>";
-		}
-		
-		private String readCSS(){
-			try {
-				BufferedReader reader = new BufferedReader(new InputStreamReader(context.getAssets().open("css/webpage.css")));
-				StringBuilder css = new StringBuilder();
-				
-				String temp = "";
-				while((temp = reader.readLine()) != null)
-					css.append(temp);
-				
-				reader.close();
-				return css.toString();
-			} catch (Exception e){
-				Log.i("error", "error read file from asset");
-			} 
-			
-			return "";
-		}
-		
 		public class ContentNews extends AsyncTask<News, String, String> {
 			@Override
 			protected String doInBackground(News... params) {
@@ -196,7 +172,7 @@ public class ReadNews extends FragmentActivity{
 				try {
 					News item = params[0];
 					if (listNews.get(position).getContent() == null) {
-						ParseHTML parse = new ParseHTML(Variables.newspaper[key/20], item.getLink());
+						ParseContentHTML parse = new ParseContentHTML(item.getLink(), context, key);
 						return parse.getContentView();
 					} else {
 						Log.i("content", "sdfsdfsdf");
@@ -215,7 +191,7 @@ public class ReadNews extends FragmentActivity{
 					listNews.get(position).setContent(result);
 					Variables.listNews.put(key, listNews);
 				}
-				webView.loadData(addMetaForHtml(result), "text/html; charset=UTF-8", null);
+				webView.loadData(result, "text/html; charset=UTF-8", null);
 				spinner.setVisibility(View.GONE);
 				webView.setVisibility(View.VISIBLE);
 				

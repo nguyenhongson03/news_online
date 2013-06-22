@@ -16,6 +16,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -158,7 +159,14 @@ public class NewspaperFragment extends Fragment{
 			do {
 				String nameNewspaper = db.getNewspaper(c);
 				int categoryNewspaper = db.getCategory(c);
-				listNewspaper.add(new Newspaper(nameNewspaper, categoryNewspaper));
+				Cursor c_thumbnail = db.getNewspaperByName(nameNewspaper, Variables.TABLE_NEWSPAPER_THUMBNAIL);
+				if (c_thumbnail.getCount() > 0) {
+					c_thumbnail.moveToFirst();
+					//Log.i("newpspaper thumbnail", nameNewspaper + " " c_t)
+					listNewspaper.add(new Newspaper(nameNewspaper, categoryNewspaper, db.getThumbnail(c_thumbnail)));
+					c_thumbnail.close();
+				} else
+					listNewspaper.add(new Newspaper(nameNewspaper, categoryNewspaper, null));
 				categories.add(categoryNewspaper);
 			} while (c.moveToNext());
 			

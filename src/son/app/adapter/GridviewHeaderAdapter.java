@@ -3,15 +3,21 @@ package son.app.adapter;
 import java.io.File;
 import java.util.ArrayList;
 
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+
+import son.app.database.NewspaperHelper;
 import son.app.gridviewheader.StickyGridHeadersSimpleAdapter;
 import son.app.model.Newspaper;
 import son.app.newsonline.R;
 import son.app.util.Variables;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,11 +28,22 @@ import android.widget.TextView;
 public class GridviewHeaderAdapter extends BaseAdapter implements StickyGridHeadersSimpleAdapter{
 	private Context context;
 	private ArrayList<Newspaper> newspapers;
+	private ImageLoader imageLoader;
+	private DisplayImageOptions options;
 	
 	public GridviewHeaderAdapter(Context context, ArrayList<Newspaper> newspapers) {
 		// TODO Auto-generated constructor stub
 		this.context = context;
 		this.newspapers = newspapers;
+		imageLoader = ImageLoader.getInstance();
+		options = new DisplayImageOptions.Builder()
+			.showStubImage(R.drawable.ic_stub)
+			.showImageForEmptyUri(R.drawable.ic_stub)
+			.showImageOnFail(R.drawable.ic_stub)
+			.cacheInMemory()
+			.cacheOnDisc()
+			.bitmapConfig(Bitmap.Config.RGB_565)
+			.build();
 	}
 	
 	@Override
@@ -72,19 +89,30 @@ public class GridviewHeaderAdapter extends BaseAdapter implements StickyGridHead
 		
 		holder.textView.setText(nameNewspaper);
 		
-		String imagePath = getImageThumnail(item.getName());
+		String imageLink;
+		NewspaperHelper db = new NewspaperHelper(context);
+		Cursor c = db.getNewspaperByName(newspapers.get(position).getName(), Variables.TABLE_NEWSPAPER_THUMBNAIL);
+		c.moveToFirst();
+		if (c.getCount() > 0)
+			imageLink = db.getThumbnail(c);
+		else 
+			imageLink = null;
+		imageLoader.displayImage(imageLink, holder.imageView, options);
+		/*String imagePath = getImageThumnail(item.getName());
+		
 		if ( imagePath != null) {
 			Bitmap mBitmap = BitmapFactory.decodeFile(imagePath);
 			//holder.imageView.setBackgroundResource(android.R.color.transparent);
 			holder.imageView.setImageBitmap(mBitmap);
 		} else
-			holder.imageView.setImageResource(Variables.icons.get(newspapers.get(position).getName()));
+			holder.imageView.setImageResource(Variables.icons.get(newspapers.get(position).getName()));*/
 		
 		if (item.isSelect())
 			holder.view.setVisibility(View.VISIBLE);
 		else 
 			holder.view.setVisibility(View.GONE);
-		
+		c.close();
+		db.close();
 		return convertView;
 	}
 
@@ -126,17 +154,5 @@ public class GridviewHeaderAdapter extends BaseAdapter implements StickyGridHead
 		public TextView textView;
 		public ImageView imageView;
 		public View view;
-	}
-	
-	private String getImageThumnail(String newspaper){
-		File[] file = new File(Environment.getExternalStorageDirectory(),".News_Online/"+newspaper+"/0/image").listFiles();
-		
-		
-		if (file != null){
-			if (file.length > 0)
-				return file[0].getAbsolutePath();
-		} 
-		
-		return null;
 	}
 }

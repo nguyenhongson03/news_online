@@ -7,7 +7,7 @@ import son.app.model.News;
 import son.app.newsonline.ListNewspaperPage;
 import son.app.newsonline.R;
 import son.app.newsonline.ReadNews;
-import son.app.parse.ParseRSS;
+import son.app.parse.ParseNewsRSS;
 import son.app.util.Variables;
 import android.app.AlertDialog;
 import android.app.Fragment;
@@ -39,7 +39,7 @@ public class NewsFragment extends Fragment{
 	private String newspaper;
 	private int locationNewspaper;
 	private int count = 0;
-	private ParseRSS parseRss = null;
+	private ParseNewsRSS parseRss = null;
 	private ListNewsAsync task;
 	private boolean onLoad = false;
 	private Handler mHandler = new Handler();
@@ -79,7 +79,7 @@ public class NewsFragment extends Fragment{
 		listView = (ListView) rootView.findViewById(R.id.list);
 		
 		
-		adapter = new ListNewsAdapter(getActivity(), listNews, newspaper+"/"+i);
+		adapter = new ListNewsAdapter(getActivity(), listNews, newspaper);
 		listView.setAdapter(adapter);
 		task = new ListNewsAsync();
 		if (Variables.listNews.get(locationNewspaper*20+i) == null) {
@@ -143,7 +143,7 @@ public class NewsFragment extends Fragment{
 			try {
 				onLoad = false;
 				if (parseRss == null)
-					parseRss = new ParseRSS(Variables.NEWSPAPER_RSS[locationNewspaper][params[0]], locationNewspaper*20 + params[0]);
+					parseRss = new ParseNewsRSS(Variables.NEWSPAPER_RSS[locationNewspaper][params[0]], locationNewspaper*20 + params[0]);
 				Log.i("size", parseRss.getSizeList()+"");
 				if (isCancelled()) 
 					return null;

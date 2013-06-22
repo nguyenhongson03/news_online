@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import son.app.util.Variables;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -137,6 +139,21 @@ public class NewspaperHelper extends SQLiteOpenHelper{
 		getWritableDatabase().insert(tableName, "newspaper", cv);
 	}
 	
+	public void insert(String newspaper, String thumbnail, String tableName){
+		ContentValues cv = new ContentValues();
+		cv.put("newspaper", newspaper);
+		cv.put("thumbnail", thumbnail);
+		getWritableDatabase().insert(tableName, "newspaper", cv);
+	}
+	
+	public void updateThumbnail(String newspaper, String thumbnail){
+		String[] whereArgs = {newspaper};
+		ContentValues cv = new ContentValues();
+		cv.put("newspaper", newspaper);
+		cv.put("thumbnail", thumbnail);
+		getWritableDatabase().update(Variables.TABLE_NEWSPAPER_THUMBNAIL, cv, "newspaper=?", whereArgs);
+	}
+	
 	public void delete(String newspaper, String tableName){
 		String[] whereArgs = {newspaper};
 		getWritableDatabase().delete(tableName, "newspaper=?", whereArgs);
@@ -160,5 +177,9 @@ public class NewspaperHelper extends SQLiteOpenHelper{
 	
 	public int getCategory(Cursor c){
 		return Integer.parseInt(c.getString(2));
+	}
+	
+	public String getThumbnail(Cursor c) {
+		return c.getString(c.getColumnIndex("thumbnail"));
 	}
 }
