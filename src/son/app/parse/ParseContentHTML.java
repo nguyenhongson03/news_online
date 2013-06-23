@@ -74,18 +74,24 @@ public class ParseContentHTML {
 		if (elements != null && elements.size() > 0 ){
 			Log.i("element size", elements.size() + "");
 			Element element = checkLink(elements.first());
-			content = "<html><head>" + scriptHead.toString() + readCSS() + "</head><body>" + scriptBody + normalizeContent(element).toString() + "</body></html>";
+			content = "<html><head>" + scriptHead.toString() + readCSS() + "</head><body>" + scriptBody + removeSomeAttr(normalizeContent(element).toString()) + "</body></html>";
 		} else if (getNewspaperContentId() != null){
 			Element element = doc.getElementById(getNewspaperContentId());
 			Log.i("id", getNewspaperContentId());
 			
 			element = checkLink(element);
-			content = "<html><head>" + scriptHead.toString() + readCSS() + "</head><body>"+ scriptBody + normalizeContent(element).toString() + "</body></html>";
+			content = "<html><head>" + scriptHead.toString() + readCSS() + "</head><body>"+ scriptBody + removeSomeAttr(normalizeContent(element).toString()) + "</body></html>";
 			
 		} else {
-			content = "<html><head>" + scriptHead.toString() + readCSS() + "</head><body>"+ scriptBody + normalizeContent(doc).toString() + "</body></html>";
+			content = "<html><head>" + scriptHead.toString() + readCSS() + "</head><body>"+ scriptBody + removeSomeAttr(normalizeContent(doc).toString()) + "</body></html>";
 		}
-		return removeSize(removeAttrHeight(removeAttrStyle(removeMaxWidthImage(removeAttrWidth(content)))));
+		
+		Log.i("content html", removeSize(removeAttrHeight(removeAttrStyle(removeMaxWidthImage(removeAttrWidth(content))))));
+		return content;
+	}
+	
+	private String removeSomeAttr(String str){
+		return removeSize(removeAttrHeight(removeAttrStyle(removeMaxWidthImage(removeAttrWidth(str)))));
 	}
 	
 	private String readCSS(){
@@ -251,6 +257,11 @@ public class ParseContentHTML {
 		if (item != null)
 			item.remove();
 		
+		Elements strongs = element.select("div > strong");
+		for (Element strong : strongs)
+			if (strong.select("div") != null)
+				strong.remove();
+		
 		return element;
 	}
 	
@@ -345,6 +356,15 @@ public class ParseContentHTML {
 		if (element.select("span.date") != null)
 			element.select("span.date").remove();
 		
+		if (element.select("span.source") != null)
+			element.select("span.source").remove();
+		
+		Elements divs = element.select("div.news-detailct").first().select("div > div");
+		if (divs != null){
+			int size = divs.size();
+			if (divs.get(size - 1).select("br") != null)
+				divs.get(size - 1).remove();
+		}
 		return element;
 	}
 	

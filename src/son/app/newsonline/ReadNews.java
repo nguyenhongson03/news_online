@@ -24,9 +24,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebSettings.PluginState;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
@@ -139,10 +141,13 @@ public class ReadNews extends FragmentActivity{
 				spinner = (ProgressBar) v.findViewById(R.id.spinner);
 				
 				webView = (WebView) v.findViewById(R.id.webView);
+				webView.setWebChromeClient(new WebChromeClient());
 				webView.getSettings().setSupportZoom(true);
 				webView.getSettings().setBuiltInZoomControls(true);
 				webView.getSettings().setDisplayZoomControls(false);
 				webView.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+				webView.getSettings().setJavaScriptEnabled(true);
+				webView.getSettings().setPluginState(WebSettings.PluginState.ON_DEMAND);
 				webView.getSettings().setAppCachePath(Environment.getExternalStorageDirectory() + ".News_Online/" + Variables.newspaper[key/20] + "/cache");
 				webView.setVisibility(View.GONE);
 				
@@ -156,7 +161,7 @@ public class ReadNews extends FragmentActivity{
 				
 				
 				
-				(new ContentNews()).execute(item);
+				(new ContentNews()).execute(item.getLink());
 				
 				return v;
 			} catch (Exception e){
@@ -165,14 +170,14 @@ public class ReadNews extends FragmentActivity{
 			return null;
 		}
 		
-		public class ContentNews extends AsyncTask<News, String, String> {
+		public class ContentNews extends AsyncTask<String, String, String> {
 			@Override
-			protected String doInBackground(News... params) {
+			protected String doInBackground(String... params) {
 				// TODO Auto-generated method stub
 				try {
-					News item = params[0];
+					
 					if (listNews.get(position).getContent() == null) {
-						ParseContentHTML parse = new ParseContentHTML(item.getLink(), context, key);
+						ParseContentHTML parse = new ParseContentHTML(params[0], context, key);
 						return parse.getContentView();
 					} else {
 						Log.i("content", "sdfsdfsdf");
@@ -198,6 +203,15 @@ public class ReadNews extends FragmentActivity{
 				super.onPostExecute(result);
 			}
 			
+		}
+	}
+	
+	private class AppWebViewClient extends WebViewClient {
+		@Override
+		public boolean shouldOverrideUrlLoading(WebView view, String url) {
+			// TODO Auto-generated method stub
+			view.loadUrl(url);
+			return true;
 		}
 	}
 }

@@ -15,7 +15,7 @@ import android.widget.ImageButton;
 
 public class OfflineFragment extends Fragment{
 	private GridView gridView;
-	private ImageButton addNewspaper;
+	private Button addNewspaper;
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -24,7 +24,7 @@ public class OfflineFragment extends Fragment{
 		View rootView = inflater.inflate(R.layout.offline_fragment, container, false);
 		
 		gridView = (GridView) rootView.findViewById(R.id.gridView);
-		addNewspaper = (ImageButton) rootView.findViewById(R.id.add_newspaper);
+		addNewspaper = (Button) rootView.findViewById(R.id.add_newspaper);
 		
 		addNewspaper.setOnClickListener(new View.OnClickListener() {
 			
