@@ -1,23 +1,25 @@
 package son.app.fragment;
 
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
+import com.actionbarsherlock.app.SherlockFragment;
+
 import son.app.adapter.ListNewsAdapter;
+import son.app.database.NewspaperHelper;
 import son.app.model.News;
 import son.app.newsonline.ListNewspaperPage;
 import son.app.newsonline.R;
 import son.app.newsonline.ReadNews;
-import son.app.parse.ParseNewsRSS;
+import son.app.parse.ParseNewsHTML;
 import son.app.util.Variables;
 import android.app.AlertDialog;
-import android.app.Fragment;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,23 +27,28 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 import android.widget.AbsListView.OnScrollListener;
 
-public class NewsFragment extends Fragment{
+public class NewsFragment extends SherlockFragment{
 	public static final String CATEGORY_NUMBER = "category_number";
 	public static final String NEWSPAPER = "newspaper_name";
 	
 	private static ListNewsAdapter adapter;
-	private static ListView listView;
-	private static ProgressBar spinner;
 	
-	private ArrayList<News> listNews = new ArrayList<News>();
+	private ListView list;
+	private static ProgressBar spinner;
+	private View footer;
+	
 	private String newspaper;
+	private int category;
 	private int locationNewspaper;
-	private int count = 0;
-	private ParseNewsRSS parseRss = null;
+	private int sizeList = 0;
 	private ListNewsAsync task;
+	
 	private boolean onLoad = false;
+	private boolean isFinished = false;
+	
 	private Handler mHandler = new Handler();
 	private Runnable mRunnable = new Runnable() {
 		
@@ -72,46 +79,49 @@ public class NewsFragment extends Fragment{
 		
 		spinner = (ProgressBar) rootView.findViewById(R.id.spinner);
 		
-		final int i = getArguments().getInt(CATEGORY_NUMBER);
+		category = getArguments().getInt(CATEGORY_NUMBER);
 		newspaper = getArguments().getString(NEWSPAPER);
 		locationNewspaper = Variables.newspaperLocation.get(newspaper);
 		
-		listView = (ListView) rootView.findViewById(R.id.list);
-		
-		
-		adapter = new ListNewsAdapter(getActivity(), listNews, newspaper);
-		listView.setAdapter(adapter);
+		if (Variables.listNews.get(locationNewspaper*20 + category) == null)
+			Variables.listNews.put(locationNewspaper*20 + category, new ArrayList<News>());
+		list = (ListView) rootView.findViewById(R.id.list);
+		footer = inflater.inflate(R.layout.footer, list, false);
+		list.addFooterView(footer);
+		adapter = new ListNewsAdapter(getActivity(), Variables.listNews.get(locationNewspaper*20 + category), newspaper);
+		list.setAdapter(adapter);
 		task = new ListNewsAsync();
-		if (Variables.listNews.get(locationNewspaper*20+i) == null) {
-			listView.setVisibility(View.GONE);
+		if (Variables.listNews.get(locationNewspaper*20+category).size() == 0) {
+			list.setVisibility(View.GONE);
 			spinner.setVisibility(View.VISIBLE);
-			task.execute(i);
+			task.execute();
 		} else {
 			spinner.setVisibility(View.GONE);
-			listView.setVisibility(View.VISIBLE);
-			copyToListNews(Variables.listNews.get(locationNewspaper*20+i));
-			Log.i("listnews length", listNews.size()+"");
-			count = listNews.size();
+			list.setVisibility(View.VISIBLE);
 			adapter.notifyDataSetChanged();
 		}
 		
-		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1,
 					int arg2, long arg3) {
 				// TODO Auto-generated method stub
-				listNews.get(arg2).setRead(true);
-				Variables.listNews.put(locationNewspaper*20+i, listNews);
-				Intent intent = new Intent(getActivity(), ReadNews.class);
-				intent.putExtra("key", Integer.toString(locationNewspaper*20 + i));
-				intent.putExtra("position", Integer.toString(arg2));
-				startActivity(intent);
+				if (!onLoad) {
+					NewspaperHelper db = new NewspaperHelper(getSherlockActivity());
+					db.insertLinkRead(Variables.listNews.get(locationNewspaper*20 + category).get(arg2).getLink());
+					db.close();
+					Intent intent = new Intent(getActivity(), ReadNews.class);
+					intent.putExtra("key", Integer.toString(locationNewspaper*20 + category));
+					intent.putExtra("position", Integer.toString(arg2));
+					startActivity(intent);
+				} else 
+					Toast.makeText(getSherlockActivity(), "Loading", Toast.LENGTH_SHORT).show();
 			}
 			
 		});
 		
-		listView.setOnScrollListener(new OnScrollListener() {
+		list.setOnScrollListener(new OnScrollListener() {
 			
 			@Override
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
@@ -123,11 +133,10 @@ public class NewsFragment extends Fragment{
 			public void onScroll(AbsListView view, int firstVisibleItem,
 					int visibleItemCount, int totalItemCount) {
 				// TODO Auto-generated method stub
-				if (task != null && (firstVisibleItem + visibleItemCount == totalItemCount) && !onLoad){
-					Log.i("test", "test1");
-					if (task.getStatus() == Status.FINISHED || task.getStatus() == Status.PENDING) {
+				if ((task != null && task.getStatus() == Status.FINISHED ) || (task == null && Variables.listNews.get(locationNewspaper*20 + category).size() > 0)){
+					if (  (firstVisibleItem + visibleItemCount == totalItemCount) && !onLoad && !isFinished) {
 						task = new ListNewsAsync();
-						task.execute(i);
+						task.execute();
 					}
 				}
 			}
@@ -135,58 +144,45 @@ public class NewsFragment extends Fragment{
 		return rootView;
 	}
 	
-	private class ListNewsAsync extends AsyncTask<Integer, News, Integer> {
-
-		@Override
-		protected Integer doInBackground(Integer... params){
-			// TODO Auto-generated method stub
-			try {
-				onLoad = false;
-				if (parseRss == null)
-					parseRss = new ParseNewsRSS(Variables.NEWSPAPER_RSS[locationNewspaper][params[0]], locationNewspaper*20 + params[0]);
-				Log.i("size", parseRss.getSizeList()+"");
-				if (isCancelled()) 
-					return null;
-				else {
-					int max = ( count + 15 ) < parseRss.getSizeList() ? (count + 15) : parseRss.getSizeList();
-					Log.i("max", max+"");
-					for (; count < max; count++){
-						publishProgress(parseRss.getItemNews(count));
-						if (isCancelled())
-							break;
-					}
-				}
-			} catch (Exception e){
-				mHandler.post(mRunnable);
-				e.printStackTrace();
-			}
-			return params[0];
-		}
-		
-		@Override
-		protected void onProgressUpdate(News... item) {
-			// TODO Auto-generated method stub
-			
-			listView.setVisibility(View.VISIBLE);
-			spinner.setVisibility(View.GONE);
-			listNews.add(item[0]);
-			adapter.notifyDataSetChanged();
-		}
-		
-		@Override
-		protected void onPostExecute(Integer result) {
-			// TODO Auto-generated method stub
-			super.onPostExecute(result);
-			onLoad = false;
-			Variables.listNews.put(locationNewspaper*20 + result, listNews);
-		}
+	@Override
+	public void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		adapter.notifyDataSetChanged();
 	}
 	
-	private void copyToListNews(ArrayList<News> list){
-		int size = list.size();
-		for (int i = 0;i < size;i++){
-			News item = list.get(i);
-			listNews.add(item);
+	private class ListNewsAsync extends AsyncTask<Void, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Void... params){
+			// TODO Auto-generated method stub
+			try {
+				onLoad = true;
+				ParseNewsHTML parser = new ParseNewsHTML(newspaper, category);
+				parser.getData();
+			} catch (UnknownHostException e){
+				mHandler.post(mRunnable);
+				e.printStackTrace();
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void result) {
+			// TODO Auto-generated method stub
+			super.onPostExecute(result);
+			if (sizeList == Variables.listNews.get(locationNewspaper*20 + category).size()) {
+				isFinished = true;
+				list.removeFooterView(footer);
+			} else 
+				sizeList = Variables.listNews.get(locationNewspaper*20 + category).size();
+			onLoad = false;
+			spinner.setVisibility(View.GONE);
+			list.setVisibility(View.VISIBLE);
+			adapter.notifyDataSetChanged();
 		}
 	}
 }

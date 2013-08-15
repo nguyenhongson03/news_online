@@ -1,8 +1,15 @@
-package son.app.fragment;
+/*package son.app.fragment;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
+import com.actionbarsherlock.app.SherlockFragment;
+import com.actionbarsherlock.view.ActionMode;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
+
+import son.app.gridviewheader.StickyGridHeadersGridView;
 import son.app.adapter.GridviewHeaderAdapter;
 import son.app.database.NewspaperHelper;
 import son.app.util.Variables;
@@ -12,16 +19,8 @@ import son.app.newsonline.ListNews;
 import son.app.newsonline.R;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.util.Log;
-import android.view.ActionMode;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -29,13 +28,13 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.GridView;
 
-public class NewspaperFragment extends Fragment{
+public class NewspaperFragment extends SherlockFragment{
 	private NewspaperHelper db;
 	private ArrayList<Newspaper> listNewspaper = new ArrayList<Newspaper>();
 	private ArrayList<Integer> categories = new ArrayList<Integer>();
 	private GridviewHeaderAdapter adapter;
 	private Cursor c;
-	private GridView gridView;
+	private StickyGridHeadersGridView gridView;
 	private ImageButton add;
 	
 	private int numItemSelected = 0;
@@ -48,7 +47,7 @@ public class NewspaperFragment extends Fragment{
 		// TODO Auto-generated method stub
 		View rootView = inflater.inflate(R.layout.newspaper_fragment, container, false);
 		db = new NewspaperHelper(getActivity().getApplicationContext());
-		gridView = (GridView) rootView.findViewById(R.id.gridView);
+		gridView = (StickyGridHeadersGridView) rootView.findViewById(R.id.gridView);
 		add = (ImageButton) rootView.findViewById(R.id.add_newspaper);
 		inputNewspaper();
 		
@@ -75,7 +74,6 @@ public class NewspaperFragment extends Fragment{
 					adapter.notifyDataSetChanged();
 				} else {
 					Intent i = new Intent(getActivity(), ListNews.class);
-					i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 					i.putExtra("newspaper", listNewspaper.get(arg2).getName());
 					startActivity(i);
 				}
@@ -90,7 +88,7 @@ public class NewspaperFragment extends Fragment{
 				// TODO Auto-generated method stub
 				if (!enableSelected){
 					numItemSelected = 0;
-					getActivity().startActionMode(mActionModeBar);
+					//getActivity().
 					enableSelected = true;
 					adapter.notifyDataSetChanged();
 					
@@ -110,10 +108,16 @@ public class NewspaperFragment extends Fragment{
 			}
 			
 		});
-		Bitmap res = BitmapFactory.decodeResource(getResources(), R.drawable.btn3_menu);
-		Bitmap resized;
-		resized = Bitmap.createScaledBitmap(res, (int)(res.getHeight() * 0.5), (int)(res.getWidth()*0.5), true);
-		add.setImageBitmap(resized);
+		
+		gridView.setOnHeaderClickListener(new StickyGridHeadersGridView.OnHeaderClickListener() {
+			
+			@Override
+			public void onHeaderClick(AdapterView<?> parent, View view, long id) {
+				// TODO Auto-generated method stub
+				//parent.getChildAt(index)
+			}
+		});
+		
 		
 		add.setOnClickListener(new View.OnClickListener() {
 			
@@ -133,7 +137,7 @@ public class NewspaperFragment extends Fragment{
 	public void onResume() {
 		// TODO Auto-generated method stub
 		super.onResume();
-		db = new NewspaperHelper(getActivity().getApplicationContext());
+		db.openDataBase();
 		listNewspaper.clear();
 		inputNewspaper();
 		adapter.notifyDataSetChanged();
@@ -163,10 +167,10 @@ public class NewspaperFragment extends Fragment{
 				if (c_thumbnail.getCount() > 0) {
 					c_thumbnail.moveToFirst();
 					//Log.i("newpspaper thumbnail", nameNewspaper + " " c_t)
-					listNewspaper.add(new Newspaper(nameNewspaper, categoryNewspaper, db.getThumbnail(c_thumbnail)));
+					//listNewspaper.add(new Newspaper(nameNewspaper, categoryNewspaper, db.getThumbnail(c_thumbnail)));
 					c_thumbnail.close();
 				} else
-					listNewspaper.add(new Newspaper(nameNewspaper, categoryNewspaper, null));
+					//listNewspaper.add(new Newspaper(nameNewspaper, categoryNewspaper, null));
 				categories.add(categoryNewspaper);
 			} while (c.moveToNext());
 			
@@ -227,9 +231,6 @@ public class NewspaperFragment extends Fragment{
 				
 			}
 			
-			
-			
-			
 			mode.finish();
 			return false;
 		}
@@ -241,4 +242,4 @@ public class NewspaperFragment extends Fragment{
 				numSelected.setText("");
 		}
 	}
-}
+}*/

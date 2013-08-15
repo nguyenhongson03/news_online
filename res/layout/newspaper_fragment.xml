@@ -23,6 +23,6 @@
         android:layout_gravity="right|bottom"
         android:paddingBottom="10dp"
         android:background="@android:color/transparent"
-        android:src="@drawable/btn3_menu" />
+        android:src="@drawable/add" />
 
 </FrameLayout>

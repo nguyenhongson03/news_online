@@ -4,6 +4,7 @@ import son.app.database.NewspaperHelper;
 import son.app.newsonline.R;
 import son.app.util.Variables;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,21 +39,31 @@ public class AddNewspaperAdapter extends ArrayAdapter<String>{
 		ImageView icon = (ImageView) v.findViewById(R.id.icon);
 		
 		final String item = ListNewspaper[position];
-		newspaper.setText(Variables.NewspaperTitle.get(item));
+		newspaper.setText(Variables.newspaperTitle.get(item));
+		Log.i("name", item );
 		icon.setImageResource(Variables.icons.get(item));
+		
 		final NewspaperHelper db = new NewspaperHelper(context);
-		if (db.getNewspaperByName(item, tableName).getCount() != 0)
-			addNewspaper.setVisibility(View.GONE);
-		else {
-			addNewspaper.setOnClickListener(new View.OnClickListener() {
-				
-				@Override
-				public void onClick(View v) {
-					// TODO Auto-generated method stub
+		addNewspaper.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				if (db.getNewspaperByName(item, tableName).getCount() != 0) {
+					db.delete(item, tableName);
+				} else {
 					db.insert(item, category, tableName);
-					notifyDataSetChanged();
+					
 				}
-			});
+				notifyDataSetChanged();
+			}
+		});
+		
+		
+		if (db.getNewspaperByName(item, tableName).getCount() != 0)
+			addNewspaper.setImageResource(R.drawable.deleted);
+		else {
+			addNewspaper.setImageResource(R.drawable.add);
 		}
 		return v;
 	}

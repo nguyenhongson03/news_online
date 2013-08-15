@@ -2,35 +2,31 @@ package son.app.model;
 
 public class Newspaper {
 	private String name;
+	private String title;
 	private int category;
-	private boolean isSelect;
-	private String thumbnail;
+	private int icon;
 	
-	public Newspaper(String name, int category, String thumbnail) {
+	public Newspaper(String name, String title, int category, int icon) {
 		// TODO Auto-generated constructor stub
 		this.name = name;
 		this.category = category;
-		isSelect = false;
-		this.thumbnail = thumbnail;
-	}
-	
-	public void setIsSelect(boolean isSelect){
-		this.isSelect = isSelect;
+		this.icon = icon;
+		this.title = title;
 	}
 	
 	public String getName(){
 		return name;
 	}
 	
-	public boolean isSelect(){
-		return isSelect;
-	}
-	
 	public int getCategory(){
 		return category;
 	}
 	
-	public String getThumbnail(){
-		return thumbnail;
+	public int getThumbnail(){
+		return icon;
+	}
+	
+	public String getTitle () {
+		return title;
 	}
 }

@@ -5,18 +5,14 @@ public class News {
 	private String imageLink;
 	private String title;
 	private String link;
-	private String description;
 	private String content;
 	private boolean isRead;
 	
-	public News(String title, String date, String link, String imageLink, String description, String content) {
+	public News(String title, String link, String imageLink) {
 		// TODO Auto-generated constructor stub
 		this.title = title;
-		this.date = date;
 		this.link = link;
 		this.imageLink = imageLink;
-		this.description = description;
-		this.content = content;
 		isRead = false;
 	}
 	
@@ -42,10 +38,6 @@ public class News {
 	
 	public String getImageLink(){
 		return imageLink;
-	}
-	
-	public String getDescription(){
-		return description;
 	}
 	
 	public String getContent(){

@@ -1,22 +1,25 @@
 package son.app.newsonline;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockFragment;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 
+import son.app.database.NewspaperHelper;
 import son.app.model.News;
 import son.app.parse.ParseContentHTML;
 import son.app.util.Variables;
 
-import android.app.ActionBar;
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -28,41 +31,18 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.webkit.WebSettings.PluginState;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.ScrollView;
-import android.widget.TextView;
 
-public class ReadNews extends FragmentActivity{
+public class ReadNews extends SherlockFragmentActivity{
 	private static ReadNewsAdapter adapter;
 	private static ViewPager viewPager;
 	private static int key;
 	private static ArrayList<News> listNews;
 	private static ActionBar mActionBar;
 	private static Context context;
-	/*private static Handler handler = new Handler();
-	private static Runnable runnable = new Runnable() {
-		
-		@Override
-		public void run() {
-			// TODO Auto-generated method stub
-			AlertDialog.Builder buidler = new AlertDialog.Builder();
-			buidler.setMessage("Báo hiện giờ không khả dụng, vui lòng thử lại sau!");
-			buidler.setPositiveButton("Quay lại", new DialogInterface.OnClickListener() {
-				
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					// TODO Auto-generated method stub
-					Intent i = new Intent(ReadNews.this, ListNews.class);
-					i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-					startActivity(i);
-				}
-			});
-			
-			buidler.show();
-		}
-	};*/
+	
+	private static boolean loadContentNew = false;
+	
 	@Override
 	protected void onCreate(Bundle arg0) {
 		// TODO Auto-generated method stub
@@ -77,16 +57,66 @@ public class ReadNews extends FragmentActivity{
 		
 		listNews = Variables.listNews.get(key);
 		
+		viewPager.setPageMargin(20);
 		viewPager.setAdapter(adapter);
 		viewPager.setCurrentItem(position);
-		
-		mActionBar = getActionBar();
-		
-		Log.i("bao", Variables.newspaper[key/20]);
-		Log.i("category", Variables.NEWSPAPER_CATEGORY[key/20][key%20]);
-		Log.i("position", position+"");
+		getSupportActionBar().setTitle(Variables.listNews.get(key).get(position).getTitle());
+		viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+			
+			@Override
+			public void onPageSelected(int arg0) {
+				// TODO Auto-generated method stub
+				getSupportActionBar().setTitle(Variables.listNews.get(key).get(arg0).getTitle());
+				NewspaperHelper db = new NewspaperHelper(getApplicationContext());
+				db.insertLinkRead(Variables.listNews.get(key).get(arg0).getLink());
+				db.close();
+			}
+			
+			@Override
+			public void onPageScrolled(int arg0, float arg1, int arg2) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onPageScrollStateChanged(int arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
 	}
 	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// TODO Auto-generated method stub
+		MenuInflater inflater = getSupportMenuInflater();
+		inflater.inflate(R.menu.share_article, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// TODO Auto-generated method stub
+		if (item.getItemId() == R.id.share) {
+			Intent i = new Intent(Intent.ACTION_SEND);
+			i.setType("text/plain");
+			i.putExtra(Intent.EXTRA_TEXT, Variables.listNews.get(key).get(viewPager.getCurrentItem()).getLink());
+			Log.i("link", Variables.listNews.get(key).get(viewPager.getCurrentItem()).getLink());
+			startActivity(Intent.createChooser(i, "Share with"));
+		}
+		return super.onOptionsItemSelected(item);
+	}
+	/*private void thanhnien(Document doc) {
+		Elements articles = doc.select("a.boxlink");
+		Log.i("thanhnien size", articles.size() + "");
+		for (Element article : articles) {
+			String title = article.select("h1").first().toString();
+			String link = article.attr("href");
+			String thumbnail = article.select("img").first().attr("src");
+			
+			Variables.listNews.get(key).add(new News(title, link, thumbnail));
+		}
+	}*/
 	private class ReadNewsAdapter extends FragmentStatePagerAdapter {
 		
 		
@@ -98,7 +128,7 @@ public class ReadNews extends FragmentActivity{
 		@Override
 		public Fragment getItem(int arg0) {
 			// TODO Auto-generated method stub
-			Fragment fragment = new ReadNewsFragment();
+			ReadNewsFragment fragment = new ReadNewsFragment();
 			Bundle args = new Bundle();
 			args.putInt(ReadNewsFragment.ARG_SECTION_NUMBER, arg0);
 			fragment.setArguments(args);
@@ -113,53 +143,50 @@ public class ReadNews extends FragmentActivity{
 		
 	}
 	
-	public static class ReadNewsFragment extends Fragment {
+	public static class ReadNewsFragment extends SherlockFragment {
 		public static final String ARG_SECTION_NUMBER = "section_number";
 		private WebView webView;
+		private WebView comment;
 		private ProgressBar spinner;
-		private LinearLayout headerPage;
 		private int position;
 		
 		public ReadNewsFragment() {
 			// TODO Auto-generated constructor stub
 		}
 		
+		@SuppressLint({ "NewApi", "SetJavaScriptEnabled" })
 		@Override
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				Bundle savedInstanceState) {
 			// TODO Auto-generated method stub
 			try {
-				mActionBar.setTitle((viewPager.getCurrentItem() + 1) + "/" + listNews.size());
+				position = getArguments().getInt(ARG_SECTION_NUMBER);
+				mActionBar = getSherlockActivity().getSupportActionBar();
+				mActionBar.setDisplayHomeAsUpEnabled(true);
+				mActionBar.setDisplayShowHomeEnabled(false);
+				mActionBar.setDisplayShowTitleEnabled(true);
+				
+				//mActionBar.setTitle(Variables.listNews.get(key).get(position).getTitle());
 				
 				inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-				position = getArguments().getInt(ARG_SECTION_NUMBER);
+				
 				View v = inflater.inflate(R.layout.fragment_readnews, null);
 				
 				final News item = listNews.get(position);
 				
-				headerPage = (LinearLayout) v.findViewById(R.id.header_page);
 				spinner = (ProgressBar) v.findViewById(R.id.spinner);
+				
+				comment = (WebView) v.findViewById(R.id.comment);
+				comment.getSettings().setJavaScriptEnabled(true);
+				comment.setVisibility(View.GONE);
+				comment.setWebViewClient(new AppWebViewClient());
 				
 				webView = (WebView) v.findViewById(R.id.webView);
 				webView.setWebChromeClient(new WebChromeClient());
-				webView.getSettings().setSupportZoom(true);
-				webView.getSettings().setBuiltInZoomControls(true);
-				webView.getSettings().setDisplayZoomControls(false);
+				webView.setWebViewClient(new WebViewClientContent());
 				webView.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
 				webView.getSettings().setJavaScriptEnabled(true);
-				webView.getSettings().setPluginState(WebSettings.PluginState.ON_DEMAND);
-				webView.getSettings().setAppCachePath(Environment.getExternalStorageDirectory() + ".News_Online/" + Variables.newspaper[key/20] + "/cache");
 				webView.setVisibility(View.GONE);
-				
-				TextView title = (TextView) v.findViewById(R.id.title);
-				TextView date = (TextView) v.findViewById(R.id.date);
-				
-				Log.i("title", item.getTitle());
-				Log.i("date", item.getDate());
-				title.setText(StringEscapeUtils.unescapeHtml4(item.getTitle()));
-				date.setText(item.getDate());
-				
-				
 				
 				(new ContentNews()).execute(item.getLink());
 				
@@ -175,12 +202,10 @@ public class ReadNews extends FragmentActivity{
 			protected String doInBackground(String... params) {
 				// TODO Auto-generated method stub
 				try {
-					
-					if (listNews.get(position).getContent() == null) {
+					if (listNews.get(position).getContent() == null || loadContentNew) {
 						ParseContentHTML parse = new ParseContentHTML(params[0], context, key);
-						return parse.getContentView();
+						return parse.getContent();
 					} else {
-						Log.i("content", "sdfsdfsdf");
 						return listNews.get(position).getContent();
 					}
 				} catch (Exception e){
@@ -196,22 +221,33 @@ public class ReadNews extends FragmentActivity{
 					listNews.get(position).setContent(result);
 					Variables.listNews.put(key, listNews);
 				}
-				webView.loadData(result, "text/html; charset=UTF-8", null);
+				webView.loadDataWithBaseURL("file:///android_asset/fonts/", result, "text/html", "UTF-8", null);
 				spinner.setVisibility(View.GONE);
 				webView.setVisibility(View.VISIBLE);
-				
+				comment.setVisibility(View.VISIBLE);
+				comment.loadUrl(Variables.FACEBOOK_COMMENT + listNews.get(position).getLink());
 				super.onPostExecute(result);
 			}
 			
 		}
-	}
-	
-	private class AppWebViewClient extends WebViewClient {
-		@Override
-		public boolean shouldOverrideUrlLoading(WebView view, String url) {
-			// TODO Auto-generated method stub
-			view.loadUrl(url);
-			return true;
+		
+		private class AppWebViewClient extends WebViewClient {
+			@Override
+			public boolean shouldOverrideUrlLoading(WebView view, String url) {
+				// TODO Auto-generated method stub
+				view.loadUrl(url);
+				return true;
+			}
+		}
+		
+		private class WebViewClientContent extends WebViewClient {
+			@Override
+			public boolean shouldOverrideUrlLoading(WebView view, String url) {
+				// TODO Auto-generated method stub
+				loadContentNew = true;
+				(new ContentNews()).execute(url);
+				return true;
+			}
 		}
 	}
 }

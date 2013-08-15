@@ -146,6 +146,12 @@ public class NewspaperHelper extends SQLiteOpenHelper{
 		getWritableDatabase().insert(tableName, "newspaper", cv);
 	}
 	
+	public void insertLinkRead(String link) {
+		ContentValues cv = new ContentValues();
+		cv.put("link", link);
+		getWritableDatabase().insert(Variables.TABLE_NEWS_READ, "link", cv);
+	}
+	
 	public void updateThumbnail(String newspaper, String thumbnail){
 		String[] whereArgs = {newspaper};
 		ContentValues cv = new ContentValues();
@@ -163,12 +169,30 @@ public class NewspaperHelper extends SQLiteOpenHelper{
 		return getReadableDatabase().rawQuery("SELECT * FROM " + tableName + " WHERE newspaper=\"" + name + "\"", null);
 	}
 	
+	public boolean linkIsRead(String link) {
+		String[] args = {link};
+		Cursor c = getReadableDatabase().rawQuery("SELECT * FROM " + Variables.TABLE_NEWS_READ + " WHERE link=?", args);
+		
+		if (c.getCount() > 0) {
+			c.close();
+			return true;
+		} else {
+			c.close();
+			return false;
+		}
+	}
+	
 	public Cursor getAll(String tableName){
 		return getReadableDatabase().rawQuery("SELECT * FROM " + tableName + " ORDER BY category ASC", null);
 	}
 	
 	public Cursor getAllCategory(String tableName){
-		return getReadableDatabase().rawQuery("SELECT category FROM " + tableName + " ORDER BY category ASC", null);
+		return getReadableDatabase().rawQuery("SELECT category FROM " + tableName + " GROUP BY category ORDER BY category ASC", null);
+	}
+	
+	public Cursor getAllNewspaperByCategory (int category, String table) {
+		String[] args = {Integer.toString(category)};
+		return getReadableDatabase().rawQuery("SELECT * FROM " + table + " WHERE category=?", args);
 	}
 	
 	public String getNewspaper(Cursor c){

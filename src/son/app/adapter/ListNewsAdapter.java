@@ -10,8 +10,6 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import son.app.database.NewspaperHelper;
 import son.app.model.News;
 import son.app.newsonline.R;
-import son.app.parse.ParseTime;
-import son.app.util.Variables;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -27,81 +25,74 @@ import android.widget.TextView;
 public class ListNewsAdapter extends ArrayAdapter<News>{
 	private Context context;
 	private ArrayList<News> list;
-	private String newspaper;
 	private ImageLoader imageLoader;
 	private DisplayImageOptions options;
-	private boolean hasThumbnail;
+	
+	private NewspaperHelper db;
+	
+	private Typeface robotoBold;
 	
 	public ListNewsAdapter(Context context, ArrayList<News> list, String newspaper) {
 		super(context, R.layout.row_listnew, list);
 		// TODO Auto-generated constructor stub
 		this.context = context;
 		this.list = list;
-		this.hasThumbnail = false;
-		this.newspaper = newspaper;
 		imageLoader = ImageLoader.getInstance();
 		options = new DisplayImageOptions.Builder()
-			.showStubImage(R.drawable.ic_stub)
-			.showImageForEmptyUri(R.drawable.ic_stub)
-			.showImageOnFail(R.drawable.ic_stub)
+			.showStubImage(R.drawable.time)
+			.showImageForEmptyUri(R.drawable.time)
+			.showImageOnFail(R.drawable.time)
 			.cacheInMemory()
 			.cacheOnDisc()
 			.bitmapConfig(Bitmap.Config.RGB_565)
 			.build();
 		
+		db = new NewspaperHelper(context);
+		
+		robotoBold = Typeface.createFromAsset(context.getAssets(), "fonts/Roboto-BoldCondensed.ttf");
 	}
 	
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent){
 		// TODO Auto-generated method stub
-		View v = new View(context);
-		LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		v = inflater.inflate(R.layout.row_listnew, null);
-	
-		News item = list.get(position);
-		ImageView image = (ImageView) v.findViewById(R.id.image);
-		TextView title = (TextView) v.findViewById(R.id.title);
-		TextView date = (TextView) v.findViewById(R.id.date);
-		TextView description = (TextView) v.findViewById(R.id.description);
+		ViewHolder holder = null;
+		if (convertView == null) {
+			LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			convertView = inflater.inflate(R.layout.row_listnew, null);
 		
-		boolean isRead = item.isRead();
-		Typeface tf = Typeface.createFromAsset(context.getAssets(), "fonts/RobotoSlab-Bold.ttf");
-		
-		title.setTypeface(tf);
-		
-		title.setText(StringEscapeUtils.unescapeHtml3(item.getTitle()));
-		
-		
-		try {
-			ParseTime p = new ParseTime(item.getDate());
-			date.setText(p.getTime());
-		} catch (Exception e){
-			e.printStackTrace();
-		}
-		
-		description.setText(StringEscapeUtils.unescapeHtml4(item.getDescription()));
-		
-		if (isRead){
-			title.setTextColor(Color.GRAY);
-			description.setTextColor(Color.GRAY);
-		}
-		if (item.getImageLink() != null ) {
-			if (!hasThumbnail){
-				NewspaperHelper db = new NewspaperHelper(context);
-				if (db.getNewspaperByName(newspaper, Variables.TABLE_NEWSPAPER_THUMBNAIL).getCount() == 0)
-					db.insert(newspaper, item.getImageLink(), Variables.TABLE_NEWSPAPER_THUMBNAIL);
-				else
-					db.updateThumbnail(newspaper, item.getImageLink());
-				hasThumbnail = true;
-				db.close();
-			}
-			imageLoader.displayImage(item.getImageLink(), image, options);
+			holder = new ViewHolder();
+			holder.image = (ImageView) convertView.findViewById(R.id.image);
+			holder.title = (TextView) convertView.findViewById(R.id.title);
+			
+			holder.title.setTypeface(robotoBold);
+			
+			convertView.setTag(holder);
 		} else 
-			image.setVisibility(View.GONE);
-		return v;
+			holder = (ViewHolder) convertView.getTag();
+		
+		News item = list.get(position);
+		
+		holder.title.setText(StringEscapeUtils.unescapeHtml3(item.getTitle()));
+		
+		
+		if (db.linkIsRead(item.getLink())){
+			holder.title.setTextColor(Color.GRAY);
+		} else 
+			holder.title.setTextColor(Color.BLACK);
+		
+		if (item.getImageLink() != null ) {
+			imageLoader.displayImage(item.getImageLink(), holder.image, options);
+		}
+		
+		return convertView;
 	}
 	
 	public ArrayList<News> getList(){
 		return list;
+	}
+	
+	static class ViewHolder {
+		ImageView image;
+		TextView title;
 	}
 }

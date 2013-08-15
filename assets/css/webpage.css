@@ -1,7 +1,61 @@
-<style type='text/css'> 
-        img {max-width: 100%;height:initial;} 
-        div,table,tbody,tr,td,p,span,a {width: 100%;}
-        blockquote {width: 100%;margin-right: 0px;margin-left: 0px;}
-        iframe {max-width: 100%}
-        video {width: 100%}
+<style type="text/css">
+	@font-face {
+		font-family: 'Roboto';
+		font-style: normal;
+		font-weight: normal;
+		src: url('file:///android_asset/fonts/Roboto-Condensed.ttf') format('truetype');
+	}
+	@font-face {
+  		font-family: 'Roboto-Bold';
+  		font-style: bold;
+  		font-weight: bold;
+  		src: url('file:///android_asset/fonts/Roboto-BoldCondensed.ttf') format('truetype');
+	}
+	
+	@font-face {
+		font-family: 'Roboto-Italic';
+		font-style: italic;
+		font-weight: italic;
+		src: url('file:///android_asset/fonts/Roboto-CondensedItalic.ttf') format('truetype');
+	}
+	
+	div, p, span, h2, h3, h4, h5, h6, h7, table, tbody, td, li{
+		width: 100%;
+		font-size: 13pt;
+	}
+	
+	ul {
+		list-style: none;
+		padding-left: 0px;
+	}
+	
+	h1 {
+		font-size: 15pt;
+		font-family: 'Roboto-Bold';
+	}
+	
+	img{
+		max-width: 100%;
+		height:initial;
+	}
+	
+	iframe, video {
+		width: 100%;
+		height:initial;
+	}
+	
+	strong,b {
+		font-family: 'Roboto-Bold';
+		font-size: 13pt;
+	}
+	
+	em,i {
+		font-family: 'Roboto-Italic'
+	}
+	
+	body {
+		font-family: 'Roboto';
+		font-size: 13pt;
+		text-align: justify;
+	}
 </style>

@@ -2,10 +2,11 @@ package son.app.newsonline;
 
 import java.io.IOException;
 
+import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockActivity;
+
 import son.app.database.NewspaperHelper;
 
-import android.app.ActionBar;
-import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -18,7 +19,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 
-public class StartupPage extends Activity{
+public class StartupPage extends SherlockActivity{
 	private ProgressDialog progressDialog;
 	private NewspaperHelper db;
 	@Override
@@ -26,7 +27,7 @@ public class StartupPage extends Activity{
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		openDB();
-		ActionBar actionBar = getActionBar();
+		ActionBar actionBar = getSupportActionBar();
 		
 		actionBar.setHomeButtonEnabled(false);
 		actionBar.setDisplayShowHomeEnabled(false);
@@ -81,8 +82,10 @@ public class StartupPage extends Activity{
 			progressDialog.dismiss();
 			if (result){
 				Intent i = new Intent(StartupPage.this, ListNewspaperPage.class);
+				i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 				i.putExtra("newspaper", "vnexpress");
 				startActivity(i);
+				finish();
 			} else {
 				final Dialog dialog = new Dialog(StartupPage.this);
 				dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);

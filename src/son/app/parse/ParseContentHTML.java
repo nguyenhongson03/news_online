@@ -6,11 +6,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.DefaultClientConnection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -24,7 +19,6 @@ import android.util.Log;
 public class ParseContentHTML {
 	private String newspaper;
 	private Context context;
-	private int key;
 	private String link;
 	
 	
@@ -32,62 +26,442 @@ public class ParseContentHTML {
 		// TODO Auto-generated constructor stub
 		this.newspaper = Variables.newspaper[key/20];
 		this.context = context;
-		this.key = key;
 		this.link = link;
 	}
 	
-	public String getContentView() throws Exception{
-		InputStream in = null;
-		if (newspaper.equals("anninhthegioi") || 
-				newspaper.equals("congannhandan") ||
-				newspaper.equals("anninhthegioi_ct") ||
-				newspaper.equals("canhsattoancau") ||
-				newspaper.equals("vannghecongan")){
-			HttpGet httpGet = new HttpGet(link);
-			HttpClient client = new DefaultHttpClient();
-			HttpResponse response = client.execute(httpGet);
-			in = response.getEntity().getContent();
-		} else {
-			URL url = new URL(link);
-			Log.i("link", link);
-			HttpURLConnection connect = (HttpURLConnection) url.openConnection();
-			
-			connect.setReadTimeout(20*1000); //20s
-			
-			connect.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile; rv:21.0) Gecko/21.0 Firefox/21.0");
-			
-			in = connect.getInputStream();
-		}
+	public String getContent () throws Exception {
+		Document doc = Jsoup.parse(getInputStream(), "UTF-8", "");
 		
-		Document doc = Jsoup.parse(in, "UTF-8", "");
+		String content = removeSomeAttr(parserContent(doc));
 		
-		Elements scriptHead = doc.select("head > script");
-		Elements scriptBody = doc.select("body > script");
+		return "<html><head>" + readCSS() + "</head><body>" + content + "</body></html>";
+	}
+	
+	private String parserContent(Document doc) {
+		checkLink(doc);
 		
-		String classContent = getNewspaperContentClass();
-		Elements elements = null;
-		String content = null;
+		if (newspaper.equals("vnexpress"))
+			return vnexpress(doc);
+		else if (newspaper.equals("dantri"))
+			return dantri(doc);
+		else if (newspaper.equals("vietnamnet"))
+			return vietnamnet(doc);
+		else if (newspaper.equals("24h"))
+			return haitugio(doc);
+		else if (newspaper.equals("laodong"))
+			return laodong(doc);
+		else if (newspaper.equals("nld"))
+			return nld(doc);
+		else if (newspaper.equals("xahoi"))
+			return xahoi(doc);
+		else if (newspaper.equals("giaoduc"))
+			return giaoduc(doc);
+		else if (newspaper.equals("soha"))
+			return soha(doc);
+		else if (newspaper.equals("infonet"))
+			return infonet(doc);
+		else if (newspaper.equals("kenh14"))
+			return kenh14(doc);
+		else if (newspaper.equals("tiin"))
+			return tiin(doc);
+		else if (newspaper.equals("2sao"))
+			return tosao(doc);
+		else if (newspaper.equals("xzone"))
+			return xzone(doc);
+		else if (newspaper.equals("congly"))
+			return congly(doc);
+		else if (newspaper.equals("khoahoc"))
+			return khoahoc(doc);
+		else if (newspaper.equals("thiennhien"))
+			return thiennhien(doc);
+		else if (newspaper.equals("genk"))
+			return genk(doc);
+		else if (newspaper.equals("cafeauto"))
+			return cafeauto(doc);
+		else if (newspaper.equals("autopro"))
+			return autopro(doc);
+		else if (newspaper.equals("autodaily"))
+			return autodaily(doc);
+		else if (newspaper.equals("cafeland"))
+			return cafeland(doc);
+		else if (newspaper.equals("cafebiz"))
+			return cafebiz(doc);
+		else if (newspaper.equals("cafef"))
+			return cafef(doc);
+		else if (newspaper.equals("vneconomy"))
+			return vneconomy(doc);
+		else if (newspaper.equals("stockbiz"))
+			return stockbiz(doc);
+		else if (newspaper.equals("vietstock"))
+			return vietstock(doc);
+		else if (newspaper.equals("dddn"))
+			return dddn(doc);
+		else if (newspaper.equals("bongda24h"))
+			return bongda24h(doc);
+		else if (newspaper.equals("anninhthudo"))
+			return anninhthudo(doc);
+		else if (newspaper.equals("afamily"))
+			return afamily(doc);
+		else if (newspaper.equals("eva"))
+			return eva(doc);
+		else if (newspaper.equals("nguoiduatin"))
+			return nguoiduatin(doc);
+		else if (newspaper.equals("danviet"))
+			return danviet(doc);
+		else if (newspaper.equals("thanhnien"))
+			return thanhnien(doc);
+		else if (newspaper.equals("ictnews"))
+			return ictnews(doc);
+		else if (newspaper.equals("tuoitre"))
+			return tuoitre(doc);
+		else if (newspaper.equals("gamek"))
+			return gamek(doc);
+		else if (newspaper.equals("kienthuc"))
+			return kienthuc(doc);
+		else 
+			return ngoisao(doc);
+	}
+	
+	private InputStream getInputStream() throws Exception {
+		URL url = new URL(link);
+		HttpURLConnection connect = (HttpURLConnection) url.openConnection();
 		
-		if (classContent != null )
-			elements = doc.getElementsByClass(classContent);
+		connect.setReadTimeout(30*1000);
+		connect.setRequestProperty("User-Agent", "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_3_2 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8H7 Safari/6533.18.5");
 		
-		if (elements != null && elements.size() > 0 ){
-			Log.i("element size", elements.size() + "");
-			Element element = checkLink(elements.first());
-			content = "<html><head>" + scriptHead.toString() + readCSS() + "</head><body>" + scriptBody + removeSomeAttr(normalizeContent(element).toString()) + "</body></html>";
-		} else if (getNewspaperContentId() != null){
-			Element element = doc.getElementById(getNewspaperContentId());
-			Log.i("id", getNewspaperContentId());
-			
-			element = checkLink(element);
-			content = "<html><head>" + scriptHead.toString() + readCSS() + "</head><body>"+ scriptBody + removeSomeAttr(normalizeContent(element).toString()) + "</body></html>";
-			
-		} else {
-			content = "<html><head>" + scriptHead.toString() + readCSS() + "</head><body>"+ scriptBody + removeSomeAttr(normalizeContent(doc).toString()) + "</body></html>";
-		}
+		return connect.getInputStream();
+	}
+	
+	private String vnexpress(Document doc) {
+		Element content = doc.select("div.content_block_tin").first();
+		Log.i("content", content.toString());
 		
-		Log.i("content html", removeSize(removeAttrHeight(removeAttrStyle(removeMaxWidthImage(removeAttrWidth(content))))));
-		return content;
+		if (content.select("div.title_news").size() > 0)
+			content.select("div.title_news").remove();
+		if (content.select("div.overflow_hidden").size() > 0)
+			content.select("div.overflow_hidden").remove();
+		
+		return content.toString();
+	}
+	
+	private String dantri(Document doc) {
+		Element content = doc.select("div.news_details").first();
+		
+		return content.toString();
+	}
+	
+	private String vietnamnet(Document doc) {
+		Element content = doc.select("div.content").first();
+		
+		if (content.select("a").size() > 0)
+			content.select("a").remove();
+		
+		return content.toString();
+	}
+	
+	private String haitugio(Document doc) {
+		Element content = doc.select("div.tin-anh").first();
+		
+		if (content.select("img.img-thumb").size() > 0)
+			content.select("img.img-thumb").remove();
+		if (content.select("span.bv-tieude").size() > 0)
+			content.select("span.bv-tieude").remove();
+		
+		return content.toString();
+	}
+	
+	private String laodong(Document doc) {
+		Element header = doc.select("div.story-header").first();
+		Element body = doc.select("div.story-body").first();
+		
+		if (header.select("p.date").size() > 0)
+			header.select("p.date").remove();
+		
+		return header.toString() + body.toString();
+	}
+	
+	private String nld(Document doc) {
+		Element content = doc.select("div.detail").first();
+		
+		if (content.select("div.return").size() > 0)
+			content.select("div.return").remove();
+		
+		return content.toString();
+	}
+	
+	private String xahoi(Document doc) {
+		Element content = doc.select("div.nav-deatailcontent").first();
+		
+		return content.toString();
+	}
+	
+	private String giaoduc(Document doc) {
+		Element content = doc.select("div#contents").first();
+		
+		if (content.select("div.bot5").size() > 0)
+			content.select("div.bot5").remove();
+		
+		if (content.select("ul.related").size() > 0)
+			content.select("ul.related").remove();
+		
+		if (content.select("div.notebox").size() > 0)
+			content.select("div.notebox").remove();
+		
+		return content.toString();
+	}
+	
+	private String soha(Document doc){
+		Element content = doc.select("div.detail").first();
+		
+		if (content.select("ul.rela_news").size() > 0)
+			content.select("ul.rela_news").remove();
+		
+		if (content.select("div.tags-box").size() > 0)
+			content.select("div.tags-box").remove();
+		
+		if (content.select("div.return").size() > 0)
+			content.select("div.return").remove();
+		
+		return content.toString();
+	}
+	
+	private String infonet(Document doc) {
+		Element content = doc.select("div.story").first();
+		
+		if (content.select("div.otherList").size() > 0)
+			content.select("div.otherList").remove();
+		
+		return content.toString();
+	}
+	
+	private String kenh14(Document doc) {
+		return doc.select("div.news-detail").toString();
+	}
+	
+	private String tiin(Document doc) {
+		Element detail = doc.select("div.news-detail").first();
+		Element content = doc.select("div.news-content").first();
+		
+		return detail.toString() + content.toString();
+	}
+	
+	private String tosao(Document doc) {
+		Element title = doc.select("span#Main_NewsDetails1_lblNews_Title").first();
+		Element detail = doc.select("span#Main_NewsDetails1_lblNews_InitCont").first();
+		Element content = doc.select("span#Main_NewsDetails1_lblNews_Content").first();
+		
+		StringBuilder contentStr = new StringBuilder();
+		
+		if (title != null)
+			contentStr.append(title.toString());
+		if (detail != null)
+			contentStr.append(detail.toString());
+		if (content != null)
+			contentStr.append(content.toString());
+		
+		return contentStr.toString();
+	}
+	
+	private String xzone(Document doc) {
+		Element content = doc.select("span.content-detail-full").first();
+		Element title = doc.select("span.short-des").first();
+		
+		if (content.select("span > strong").size() > 0)
+			content.select("span > strong").remove();
+		return title.toString() + content.toString();
+	}
+	
+	private String congly(Document doc) {
+		return doc.select("div.detail").toString();
+	}
+	
+	private String khoahoc(Document doc) {
+		Element content = doc.select("div#maincontent").first();
+		
+		Elements moreArticle = content.select("p");
+		for (Element p : moreArticle)
+			if (p.select("a").size() > 0)
+				p.remove();
+		
+		return content.toString();
+	}
+	
+	private String thiennhien(Document doc) {
+		Element content = doc.select("div#content").first();
+		
+		if (content.select("div.sharing-options").size() > 0)
+			content.select("div.sharing-options").remove();
+		
+		return content.toString();
+	}
+	
+	private String genk(Document doc) {
+		return doc.select("div.detail").toString();
+	}
+	
+	private String cafeauto(Document doc) {
+		return doc.select("div#detail-entry-mobile").toString();
+	}
+	
+	private String autopro(Document doc) {
+		Element content = doc.select("div.detail").first();
+		
+		if (content.select("div.tags-box").size() > 0)
+			content.select("div.tags-box").remove();
+		
+		return content.toString();
+	}
+	
+	private String autodaily(Document doc) {
+		Element content = doc.select("article.detail-content").first();
+		
+		Elements as = content.select("a");
+		for (Element a : as) 
+			if (a.select("span").size() > 0)
+				a.remove();
+		
+		return content.toString();
+	}
+	
+	private String cafeland(Document doc) {
+		return doc.select("div.hienthinoidungchitiet").toString();
+	}
+	
+	private String cafebiz(Document doc) {
+		return doc.select("div.newsContent").toString();
+	}
+	
+	private String cafef(Document doc) {
+		Element content = doc.select("div.divContentNews").first();
+		
+		if (content.select("div.share").size() > 0)
+			content.select("div.share").remove();
+		
+		return content.toString();
+	}
+	
+	private String vneconomy(Document doc) {
+		return doc.select("div#ctl00_ContentPlaceHolder1_TinChiTiet1_divBodyTinChiTiet").toString();
+	}
+	
+	private String stockbiz(Document doc) {
+		Element content = doc.select("div.news_content_container").first();
+		
+		if (content.select("div[align=right]").size() > 0)
+			content.select("div[align=right]").remove();
+		return content.toString();
+	}
+	
+	private String vietstock(Document doc) {
+		Element content = doc.select("div.detail_content").first();
+		
+		if (content.select("form").size() > 0)
+			content.select("form").remove();
+		
+		if (content.select("ul.comment").size() > 0)
+			content.select("ul.comment").remove();
+		
+		if (content.select("div.same_news").size() > 0)
+			content.select("div.same_news").remove();
+		
+		return content.toString();
+	}
+	
+	private String dddn(Document doc){
+		Element content = doc.select("div.detail").first();
+		
+		if (content.select("div.share").size() > 0)
+			content.select("div.share").remove();
+		
+		if (content.select("div.return").size() > 0)
+			content.select("div.return").remove();
+		
+		return content.toString();
+	}
+	
+	private String bongda24h(Document doc) {
+		Element content = doc.select("div.content").first();
+		
+		if (content.select("div.weblinks").size() > 0)
+			content.select("div.weblinks").remove();
+		
+		if (content.select("div.article_title").size() > 0)
+			content.select("div.article_title").remove();
+		
+		if (content.select("a").size() > 0)
+			content.select("a").remove();
+		
+		return content.toString();
+	}
+	
+	private String afamily(Document doc) {
+		Element content = doc.select("div.news-detail").first();
+		
+		return content.toString();
+	}
+	
+	private String eva(Document doc) {
+		return doc.select("div.tin-anh").first().toString();
+	}
+	
+	private String nguoiduatin(Document doc) {
+		Element content = doc.select("div.dtl-content").first();
+		
+		if (content.select("div#div-gpt-ad-1367940434047-2").size() > 0)
+			content.select("div#div-gpt-ad-1367940434047-2").remove();
+		if (content.select("div#div-gpt-ad-1367940434047-0").size() > 0)
+			content.select("div#div-gpt-ad-1367940434047-0").remove();
+		
+		if (content.select("ul.small-list").size() > 0)
+			content.select("ul.small-list").remove();
+		return content.toString();
+	}
+	
+	private String anninhthudo(Document doc) {
+		return doc.select("div.story").toString();
+	}
+	
+	private String danviet(Document doc) {
+		Element detail = doc.select("span#NewsDetails1_lblNews_InitCont").first();
+		Element content = doc.select("span#NewsDetails1_lblNews_Content").first();
+		
+		return detail.toString() + content.toString();
+	}
+	
+	private String thanhnien(Document doc) {
+		return doc.select("div.story-content").toString();
+	}
+	
+	private String ictnews(Document doc) {
+		return doc.select("div.mt10").first().toString();
+	}
+	
+	private String tuoitre(Document doc) {
+		return doc.select("div#news-body").toString();
+	}
+	
+	private String gamek(Document doc) {
+		return doc.select("div.detail-game").toString();
+	}
+	
+	private String kienthuc(Document doc) {
+		Element content = doc.select("div.entry-content").first();
+		
+		if (content.select("ul.content_ref").size() > 0)
+			content.select("ul.content_ref").remove();
+		
+		return content.toString();
+	}
+	
+	private String ngoisao(Document doc) {
+		Element content = doc.select("div.nav-deatailcontent").first();
+		
+		if (content.select("p.more-re").size() > 0)
+			content.select("p.more-re").remove();
+		if (content.select("a.more-re").size() > 0)
+			content.select("a.more-re").remove();
+		
+		return content.toString();
 	}
 	
 	private String removeSomeAttr(String str){
@@ -131,464 +505,6 @@ public class ParseContentHTML {
 					
 				}
 		}
-		
-		return element;
-	}
-	
-	private Element normalizeContent(Element element){
-		
-		if (newspaper.equals("vnexpress"))
-			return vnexpress(element);
-		else if (newspaper.equals("tuoitre"))
-			return tuoitre(element);
-		else if (newspaper.equals("24h"))
-			return haitugio(element);
-		else if (newspaper.equals("vtc"))
-			return vtc(element);
-		else if (newspaper.equals("vietnamnet"))
-			return vietnamnet(element);
-		else if (newspaper.equals("xahoi"))
-			return xahoi(element);
-		else if (newspaper.equals("dulichvietnam"))
-			return dulichvietnam(element);
-		else if (newspaper.equals("vietbao"))
-			return vietbao(element);
-		else if (newspaper.equals("thongtincongnghe"))
-			return thongtincongnghe(element);
-		else if (newspaper.equals("ictnews"))
-			return ictnews(element);
-		else if (newspaper.equals("zing"))
-			return zing(element);
-		else if (newspaper.equals("afamily"))
-			return afamily(element);
-		else if (newspaper.equals("giadinh"))
-			return giadinh(element);
-		else if (newspaper.equals("eva"))
-			return eva(element);
-		else if (newspaper.equals("cafef"))
-			return cafef(element);
-		else if (newspaper.equals("thesaigontimes"))
-			return thesaigontimes(element);
-		else if (newspaper.equals("autopro"))
-			return autopro(element);
-		else if (newspaper.equals("anninhthudo"))
-			return anninhthudo(element);
-		else if (newspaper.equals("phapluattp"))
-			return phapluattp(element);
-		else if (newspaper.equals("giaoduc"))
-			return giaoduc(element);
-		else if (newspaper.equals("giaoducthoidai"))
-			return giaoducthoidai(element);
-		else if (newspaper.equals("bongda24h"))
-			return bongda24h(element);
-		else if (newspaper.equals("bongdaplus"))
-			return bongdaplus(element);
-		else if (newspaper.equals("stockbiz"))
-			return stockbiz(element);
-		else if (newspaper.equals("cafeauto"))
-			return cafeauto(element);
-		else if (newspaper.equals("anninhthegioi"))
-			return anninhthegioi(element);
-		else if (newspaper.equals("congannhandan"))
-			return congannhandan(element);
-		else if (newspaper.equals("anninhthegioi_ct"))
-			return anninhthegioi(element);
-		else if (newspaper.equals("canhsattoancau"))
-			return anninhthegioi(element);
-		else if (newspaper.equals("vannghecongan"))
-			return anninhthegioi(element);
-		else if (newspaper.equals("nguoiduatin"))
-			return nguoiduatin(element);
-		else if (newspaper.equals("nguoilaodong"))
-			return nguoilaodong(element);
-			return element;
-	}
-	
-	private Element vnexpress(Element element){
-		if (element.select("div.title_news") != null)
-			element.select("div.title_news").remove();
-		if (element.select("div.overflow_hidden") != null)
-			element.select("div.overflow_hidden").remove();
-		Elements allLink = element.select("a");
-		if (allLink != null){
-			allLink.remove();
-		}
-		
-		return element;
-	}
-	
-	private Element tuoitre(Element element){
-		if (element.select("div.colitemdetailNewsLeft") != null)
-			element.select("div.colitemdetailNewsLeft").remove();
-		if (element.select("div.fLeft") != null )
-			element.select("div.fLeft").remove();
-		if (element.select("div.boxComment") != null )
-			element.select("div.boxComment").remove();
-		if (element.select("div.bderBtom") != null )
-			element.select("div.bderBtom").remove();
-		for (Element item : element.select("div.pad10"))
-			item.remove();
-		for (Element item : element.select("div.clearfix"))
-			item.remove();
-		
-		return element;
-	}
-	
-	private Element nguoiduatin(Element element){
-		if (element.select("a") != null)
-			element.select("a").remove();
-		
-		return element;
-	}
-	
-	private Element haitugio(Element element){
-		if (element.select("div.bv-date") != null)
-			element.select("div.bv-date").remove();
-		if (element.select("span.bv-tieude") != null)
-			element.select("span.bv-tieude").remove();
-		if (element.select("img.img-thumb") != null)
-			element.select("img.img-thumb").remove();
-			return element;
-	}
-	
-	private Element vietnamnet(Element element){
-		Elements item = element.select("img[src$=.gif]");
-		
-		if (item != null)
-			item.remove();
-		
-		Elements strongs = element.select("div > strong");
-		for (Element strong : strongs)
-			if (strong.select("div") != null)
-				strong.remove();
-		
-		return element;
-	}
-	
-	private Element vietbao(Element element){
-		if (element.select("div.tag") != null)
-			element.select("div.tag").remove();
-		if (element.select("h1") != null)
-			element.select("h1").remove();
-		
-		return element;
-	}
-	
-	private Element xahoi(Element element){
-		for(Element item : element.select("a.more-re"))
-			item.remove();
-		return element;
-	}
-	
-	
-	private Element vtc(Element element){
-		for (Element item : element.select("a.tinlienquan"))
-			item.remove();
-		return element;
-	}
-	
-	private Element dulichvietnam(Element element){
-		if (element.select("div.linklq") != null)
-			element.select("div.linklq").remove();
-		if (element.select("h1.title_news") != null)
-			element.select("h1.title_news").remove();
-		if (element.select("p.date") != null)
-			element.select("p.date").remove();
-		return element;
-	}
-	
-	private Element thongtincongnghe(Element element){
-		if (element.select("div#widget-node-48958") != null)
-			element.select("div#widget-node-48958").remove();
-		
-		return element;
-	}
-	
-	private Element ictnews(Element element){
-		for (Element item : element.select("span > a"))
-			item.remove();
-		for (Element item : element.select("p > a"))
-			item.remove();
-		return element;
-	}
-	
-	private Element zing(Element element){
-		if (element.select("h1.pTitle") != null)
-			element.select("h1.pTitle").remove();
-		
-		if (element.select("ul.share_buttons") != null)
-			element.select("ul.share_buttons").remove();
-		
-		if (element.select("div.fb-like") != null)
-			element.select("div.fb-like").remove();
-		
-		if (element.select("tags") != null)
-			element.select("div.tags").remove();
-		
-		if (element.select("div.more_news") != null)
-			element.select("div.more_news").remove();
-		
-		if (element.select("iframe") != null)
-			element.select("iframe").remove();
-		
-		if (element.select("script") != null)
-			element.select("script").remove();
-		return element;
-	}
-	
-	private Element giadinh(Element element){
-		if (element.select("div > h1") != null)
-			element.select("div > h1").remove();
-		
-		if (element.select("p.time") != null)
-			element.select("p.time").remove();
-		
-		return element;
-	}
-	
-	private Element afamily(Element element){
-		if (element.select("span.chudett") != null)
-			element.select("span.chudett").remove();
-		
-		if (element.select("div > h1") != null)
-			element.select("div > h1").remove();
-		
-		if (element.select("span.date") != null)
-			element.select("span.date").remove();
-		
-		if (element.select("span.source") != null)
-			element.select("span.source").remove();
-		
-		Elements divs = element.select("div.news-detailct").first().select("div > div");
-		if (divs != null){
-			int size = divs.size();
-			if (divs.get(size - 1).select("br") != null)
-				divs.get(size - 1).remove();
-		}
-		return element;
-	}
-	
-	private Element eva(Element element){
-		if (element.select("div > h1") != null)
-			element.select("div > h1").remove();
-		
-		if (element.select("div.sukien2") != null)
-			element.select("div.sukien2").remove();
-		
-		if (element.select("div.bv-date") != null)
-			element.select("div.bv-date").remove();
-		
-		if (element.select("div > a") != null)
-			element.select("div > a").remove();
-		
-		if (element.select("p > a") != null)
-			element.select("p > a").remove();
-		return element;
-	}
-	
-	private Element cafef(Element element){
-		if (element.select("div.share") != null)
-			element.select("div.share").remove();
-		
-		if (element.select("div#fb-root") != null)
-			element.select("div#fb-root").remove();
-		
-		if (element.select("div.tags") != null)
-			element.select("div.tags").remove();
-		
-		if (element.select("div > h1") != null)
-			element.select("div > h1").remove();
-		
-		if (element.select("div > span") != null)
-			element.select("div > span").remove();
-		if (element.select("div > img") != null)
-			element.select("div > img").remove();
-		
-		return element;
-	}
-	
-	private Element thesaigontimes(Element element){
-		if (element.select("p.SGTOTitle") != null)
-			element.select("p.SGTOTitle").remove();
-		if (element.select("p.SGTOAuthor") != null)
-			element.select("p.SGTOAuthor").remove();
-		if (element.select("p.SGTOContent") != null)
-			element.select("p.SGTOContent").remove();
-		
-		if (element.select("td.sgtoimageleft") != null)
-			element.select("td.sgtoimageleft").remove();
-		return element;
-	}
-	
-	private Element autopro(Element element){
-		if (element.select("div > h1") != null)
-			element.select("div > h1").remove();
-		if (element.select("div.tags-box") != null)
-			element.select("div.tags-box").remove();
-		return element;
-	}
-	
-	private Element anninhthudo(Element element){
-		if (element.select("span.subtitle") != null)
-			element.select("span.subtitle").remove();
-		if (element.select("h1.title") != null)
-			element.select("h1.title").remove();
-		if (element.select("p.adate") != null)
-			element.select("p.adate").remove();
-		if (element.select("ul.article-link") != null)
-			element.select("ul.article-link").remove();
-		return element;
-	}
-	
-	private Element phapluattp(Element element){
-		if (element.select("div.return") != null)
-			element.select("div.return").remove();
-		
-		if (element.select("div > h1") != null)
-			element.select("div > h1").remove();
-		
-		if (element.select("div > span") != null)
-			element.select("div > span").remove();
-		
-		return element;
-	}
-	
-	private Element giaoduc(Element element){
-		if (element.select("ul.related") != null)
-			element.select("ul.related").remove();
-		if (element.select("div.notebox") != null)
-			element.select("div.notebox").remove();
-		
-		return element;
-	}
-	
-	private Element giaoducthoidai(Element element){
-		if (element.select("div.title") != null)
-			element.select("div.title").remove();
-		if (element.select("div.clear") != null)
-			element.select("div.clear").remove();
-		
-		return element;
-	}
-	
-	private Element bongda24h(Element element){
-		if (element.select("div.boxcmt") != null)
-			element.select("div.boxcmt").remove();
-		if (element.select("td.orther_news") != null)
-			element.select("td.orther_news").remove();
-		
-		if (element.select("div > a") != null)
-			element.select("div > a").remove();
-		
-		if (element.select("td.cate_title") != null)
-			element.select("td.cate_title").remove();
-		
-		if (element.select("h1.news_article_title") != null)
-			element.select("h1.news_article_title").remove();
-		
-		if (element.select("td > font") != null)
-			element.select("td > font").remove();
-		
-		if (element.select("p > b") != null)
-			element.select("p > b").remove();
-		
-		if (element.select("p > a") != null)
-			element.select("p > a").remove();
-		
-		return element;
-	}
-	
-	private Element bongdaplus(Element element){
-		if (element.select("span.cls") != null)
-			element.select("span.cls").remove();
-		if (element.select("div.listhdr") != null)
-			element.select("div.listhdr").remove();
-		if (element.select("p.date") != null)
-			element.select("p.date").remove();
-		if (element.select("p.title") != null)
-			element.select("p.title").remove();
-		if (element.select("div.listzone") != null)
-			element.select("div.listzone").remove();
-		if (element.select("div.listnews") != null)
-			element.select("div.listnews").remove();
-		if (element.select("div.keywords") != null)
-			element.select("div.keywords").remove();
-		if (element.select("div.facebook") != null)
-			element.select("div.facebook").remove();
-		if (element.select("div.banner") != null)
-			element.select("div.banner").remove();
-		if (element.select("div > strong") != null)
-			element.select("div > strong").remove();
-		if (element.select("br") != null)
-			element.select("br").remove();
-		if (element.select("a > strong") != null)
-			element.select("a > strong").remove();
-		return element;
-	}
-	
-	private Element stockbiz(Element element){
-		if (element.select("span > span") != null)
-			element.select("span > span").remove();
-		if (element.select("hr") != null)
-			element.select("hr").remove();
-		return element;
-	}
-	
-	private Element cafeauto(Element element){
-		if (element.select("h2.tieude") != null)
-			element.select("h2.tieude").remove();
-		
-		return element;
-	}
-	
-	private Element anninhthegioi(Element element){
-		Elements elements =  element.select("body").first().select("p");
-		Document doc = Jsoup.parse(elements.toString());
-		
-		/*if (doc.select("p[align=left]") != null)
-			doc.select("p[align=left]").remove();
-		if (doc.select("p[align=justify]") != null)
-			doc.select("p[align=justify]").remove();*/
-		
-		return doc;
-	}
-	
-	private Element congannhandan(Element element){
-		Elements allSpan = element.select("body").first().select("div > span");
-		
-		StringBuilder builder = new StringBuilder();
-		
-		for (Element item : allSpan)
-			//if (item.select("span") != null)
-				builder.append(item.toString());
-		
-		Document doc2 = Jsoup.parse(builder.toString());
-		
-		if (doc2.select("span#lbHeadline") != null)
-			doc2.select("span#lbHeadline").remove();
-		if (doc2.select("span#lbDate") != null)
-			doc2.select("span#lbDate").remove();
-		if (doc2.select("span#lbAuthor1") != null)
-			doc2.select("span#lbAuthor1").remove();
-		if (doc2.select("span.main_abstract > strong") != null)
-			doc2.select("span.main_abstract > strong").remove();
-		if (doc2.select("span#Footer_lbFooter1") != null)
-			doc2.select("span#Footer_lbFooter1").remove();
-		if (doc2.select("span#Footer_lbFooter2") != null)
-			doc2.select("span#Footer_lbFooter2").remove();
-		if (doc2.select("span#Footer_lbFooter3") != null)
-			doc2.select("span#Footer_lbFooter3").remove();
-		
-		return doc2;
-	}
-	
-	private Element nguoilaodong(Element element){
-		if (element.select("div > span") != null)
-			element.select("div > span").remove();
-		if (element.select("div > h1") != null)
-			element.select("div > h1").remove();
-		if (element.select("div.return") != null)
-			element.select("div.return").remove();
 		
 		return element;
 	}
@@ -647,93 +563,5 @@ public class ParseContentHTML {
 		}
 		
 		return source;
-	}
-	
-	public String getNewspaperContentClass(){
-		if (newspaper.equals("vnexpress"))
-			return "content_block_tin";
-		else if (newspaper.equals("dantri"))
-			return "news_details";
-		else if (newspaper.equals("24h"))
-			return "tin-anh";
-		else if (newspaper.equals("tinhte"))
-			return "messageContent";
-		else if (newspaper.equals("tuoitre"))
-			return "padT0";
-		else if (newspaper.equals("laodong"))
-			return "story-body";
-		else if (newspaper.equals("xahoi"))
-			return "nav-deatailcontent";
-		else if (newspaper.equals("nguoilaodong"))
-			return "detail";
-		else if (newspaper.equals("vietnamnet"))
-			return "content";
-		else if (newspaper.equals("vietbao"))
-			return "textnd";
-		else if (newspaper.equals("dulichvietnam"))
-			return "detailnews";
-		else if (newspaper.equals("tiin"))
-			return "news-content";
-		else if (newspaper.equals("eva"))
-			return "tin-anh";
-		else if (newspaper.equals("afamily"))
-			return "news-detail";
-		else if (newspaper.equals("giadinh"))
-			return "detail";
-		else if (newspaper.equals("thongtincongnghe"))
-			return "node-content";
-		else if (newspaper.equals("ictnews"))
-			return "content-article";
-		else if (newspaper.equals("zing"))
-			return "newsdetail_wrapper";
-		else if (newspaper.equals("vietstock"))
-			return "news_detail";
-		else if (newspaper.equals("bongda24h"))
-			return "cate_left";
-		else if (newspaper.equals("landtoday"))
-			return "content";
-		else if (newspaper.equals("batdongsan"))
-			return "detail-article-content";
-		else if (newspaper.equals("giaoduc"))
-			return "article";
-		else if (newspaper.equals("anninhthudo"))
-			return "article";
-		else if (newspaper.equals("phapluattp"))
-			return "detail";
-		else if (newspaper.equals("autopro"))
-			return "detail";
-		else if (newspaper.equals("bacsigiadinh"))
-			return "detail";
-		else if (newspaper.equals("stockbiz"))
-			return "news_content_container";
-		else if (newspaper.equals("nguoiduatin"))
-			return "detail";
-			return null;
-	}
-	
-	public String getNewspaperContentId(){
-		if (newspaper.equals("vtc"))
-			return "pageContent";
-		else if (newspaper.equals("khoahoc"))
-			return "divContent";
-		else if (newspaper.equals("nguoiduatin"))
-			return "main-detail";
-		else if (newspaper.equals("cafef"))
-			return "ctl00_mainContent_divContent";
-		else if (newspaper.equals("vneconomy"))
-			return "ctl00_ContentPlaceHolder1_TinChiTiet1_divBodyTinChiTiet";
-		else if (newspaper.equals("thesaigontimes"))
-			return "ARTICLEVIEW";
-		else if (newspaper.equals("giaoducthoidai"))
-			return "detail";
-		else if (newspaper.equals("tuoitre"))
-			return "divContent";
-		else if (newspaper.equals("tiin"))
-			return "body-content";
-		else if (newspaper.equals("bongdaplus"))
-			return "content";
-		else if (newspaper.equals("cafeauto"))
-			return "entrya";
-			return null;
 	}
 }
